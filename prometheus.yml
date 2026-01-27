@@ -1,0 +1,13 @@
+global:
+  scrape_interval: 15s      # 默认抓取间隔
+  evaluation_interval: 15s   # 规则评估间隔
+  external_labels:
+    monitor: 'Flask-Py'
+
+scrape_configs:
+  - job_name: "flask_app"
+    static_configs:
+      - targets:
+          - "web:8000"      # Docker Compose 中的服务名
+    metrics_path: "/metrics"
+    scrape_interval: 5s     # 更频繁地抓取应用指标

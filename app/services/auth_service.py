@@ -1,0 +1,48 @@
+from app.exceptions.base import BusinessError
+from app.models.user import User
+from app.extensions.extensions import db,bcrypt
+from flask_jwt_extended import create_access_token
+from sqlalchemy import or_, and_
+
+from app.utils import success
+
+
+def register_user(data):
+    email = data.email.strip() if data.email else None
+    username = data.username.strip()
+    if not email:
+        raise ValueError("邮箱不能为空")
+    if not username:
+        raise ValueError("用户名不能为空")
+    if User.query.filter(or_(User.email == email, User.username == username)).first():
+        raise ValueError("用户名或邮箱已存在")
+    password_hash = bcrypt.generate_password_hash(data.password).decode('utf-8')
+    user = User(
+        username=username,
+        password=password_hash,
+        email=email
+    )
+    try:
+        db.session.add(user)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        raise BusinessError("注册失败，请重试", code=500)
+    return user.to_dict()
+
+def user_login(email,username,password):
+    user = User.query.filter(
+        and_(User.username == username, User.email == email)
+    ).first()
+    if not user:
+        raise BusinessError("用户不存在", code=40004)
+
+        # 验证密码
+    if not bcrypt.check_password_hash(user.password, password):
+        raise BusinessError("密码错误", code=40005)
+
+    token = create_access_token(identity=user.id)
+    return {
+        **user.to_dict(),
+        "token": token
+    }
