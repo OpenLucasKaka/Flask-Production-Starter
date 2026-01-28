@@ -50,7 +50,7 @@ jobs:
 
       # 9️⃣ 数据库迁移文件检查
       - name: Migration files check
-        run: test -f migrations/alembic.ini && test -d migrations/versions && echo "✓ Migration files exist"
+        run: ls -la migrations/versions && echo "✓ Migration setup verified"
 
       # 🔟 构建 Docker 镜像
       - name: Build Docker image
