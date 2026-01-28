@@ -32,7 +32,7 @@ class TestAuthEndpoints:
         """测试首页端点"""
         response = client.get("/auth/")
         assert response.status_code == 200
-        assert response.json["status"] == "success"
+        assert response.json["code"] == "200"
 
 
 class TestMetricsEndpoint:

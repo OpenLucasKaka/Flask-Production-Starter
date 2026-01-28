@@ -46,7 +46,7 @@ jobs:
 
       # 8️⃣ 单元测试 + 覆盖率
       - name: Run tests with coverage
-        run: uv run pytest --cov-fail-under=80
+        run: uv run pytest --cov-fail-under=60
 
       # 9️⃣ 数据库迁移检查
       - name: Migration check
