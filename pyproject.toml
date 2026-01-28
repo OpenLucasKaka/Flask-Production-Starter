@@ -21,6 +21,7 @@ dependencies = [
 ]
 [tool.pytest.ini_options]
 minversion = "7.0"
+pythonpath = ["."]
 addopts = "--cov=app --cov-report=term-missing"
 testpaths = ["tests"]
 

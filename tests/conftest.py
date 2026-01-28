@@ -3,14 +3,8 @@
 """
 
 import pytest
-from app import create_app  # noqa: E402
-from app.extensions.extensions import db  # noqa: E402
-
-import sys  # noqa: E402
-import os  # noqa: E402
-
-# 添加项目根目录到 Python 路径
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app import create_app
+from app.extensions.extensions import db
 
 
 @pytest.fixture(scope="session")
