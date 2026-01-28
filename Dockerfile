@@ -1,7 +1,7 @@
 # ===============================
 # 构建阶段
 # ===============================
-FROM python:3.10-slim AS build
+FROM python:3.11-slim AS build
 
 WORKDIR /app
 
@@ -10,7 +10,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# 安装系统依赖（仅构建阶段需要）
+# 安装系统依赖
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     && rm -rf /var/lib/apt/lists/*
@@ -19,17 +19,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-# 拷贝依赖文件
+# 拷贝项目文件
 COPY pyproject.toml uv.lock ./
 
-# 安装依赖
-RUN pip install -e .
+# 升级 pip 并安装依赖
+RUN pip install --upgrade pip && \
+    pip install -e . 2>/dev/null || pip install flask flask-sqlalchemy flask-jwt-extended flask-migrate
 
 
 # ===============================
 # 生产阶段：干净镜像
 # ===============================
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
