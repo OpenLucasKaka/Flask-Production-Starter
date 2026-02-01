@@ -6,7 +6,7 @@ from flask import request, g
 from app.controller import auth_bp
 from app.schemas.auth import Register, Login
 from app.services import register_user
-from app.services.auth_service import user_login
+from app.services.auth_service import user_login, user_profile
 from app.utils import success, error
 from app.utils.validators import validate_request, validate_json_content_type
 from app.extensions.rate_limiting import limiter
@@ -56,3 +56,12 @@ def login():
         return error(code="400", message=str(e))
     except Exception as e:
         raise
+
+@auth_bp.route("profile/<user_id>", methods=["GET"])
+@validate_json_content_type()
+def profile(user_id):
+    """用户信息"""
+    result = user_profile(user_id)
+    return success(result)
+
+

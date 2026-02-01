@@ -146,7 +146,8 @@ flask db upgrade
 gunicorn -c gunicorn.conf.py wsgi:app
 ```
 
-应用将在 `http://localhost:5000` 运行。
+开发环境应用将在 `http://localhost:5000` 运行。
+模拟生产环境应用将在 `http://127.0.0.1:8000` 运行。
 
 ---
 
@@ -178,7 +179,7 @@ gunicorn -c gunicorn.conf.py wsgi:app
     "status": "success",
     "code": "200",
     "message": "success",
-    "data": {...},
+    "data": {},
     "request_id": "uuid"
 }
 ```
