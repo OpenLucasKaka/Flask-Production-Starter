@@ -163,7 +163,7 @@ black .
 ## 🔍 API 文档
 
 ### Swagger UI
-访问 `http://localhost:5000/api/v1/docs` 查看交互式 API 文档
+访问 `http://localhost:5000/api/v1/docs` 查看交互式 API 文档(需要打开api的路由)
 
 ### 主要端点
 

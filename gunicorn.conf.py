@@ -3,10 +3,11 @@
 import multiprocessing
 
 # 绑定地址和端口
-bind = "0.0.0.0:8000"
+bind = "127.0.0.1:8000"
 
 # worker 数量：CPU * 2 + 1（经典公式）
-workers = multiprocessing.cpu_count() * 2 + 1
+# workers = multiprocessing.cpu_count() * 2 + 1
+workers = 4
 
 # worker 类型
 worker_class = "sync"
