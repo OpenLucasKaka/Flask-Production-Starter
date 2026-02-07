@@ -2,7 +2,6 @@ from app.exceptions.base import BusinessError
 from app.models import Poster
 from app.extensions.extensions import db
 from flask import g
-from app.utils.pagination import pagination
 
 
 def create_poster(data):
