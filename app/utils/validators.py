@@ -10,7 +10,9 @@ from pydantic import ValidationError
 from functools import wraps
 from app.exceptions.base import (
     ValidationError as BusinessValidationError,
-    AuthorizationError, NotFoundError, QueryError,
+    AuthorizationError,
+    NotFoundError,
+    QueryError,
 )
 from app.extensions.extensions import jwt
 
@@ -108,31 +110,26 @@ def login_required():
 
     return decorator
 
+
 def validate_query(schema_class):
     """
     校验GET请求中query参数
     """
+
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if(request.method != "GET"):
-                raise NotFoundError(message='请求方式错误')
+            if request.method != "GET":
+                raise NotFoundError(message="请求方式错误")
             try:
-                #使用flat=True防止同名参数只保留一个
+                # 使用flat=True防止同名参数只保留一个
                 query_data = request.args.to_dict(flat=True)
                 g.query_data = schema_class(**query_data)
             except ValidationError as e:
-                raise QueryError(message='query参数有误',detail=e.messages)
+                raise QueryError(message="query参数有误", detail=e.messages)
 
             return f(*args, **kwargs)
 
         return decorated_function
 
     return decorator
-
-
-
-
-
-
-

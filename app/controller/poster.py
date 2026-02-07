@@ -2,12 +2,17 @@ from app.controller import poster_bp
 from app.exceptions.base import BusinessError
 from app.services.poster import create_poster, search_poster
 from app.utils.pagination import pagination
-from app.utils.validators import validate_json_content_type, login_required, validate_query
+from app.utils.validators import (
+    validate_json_content_type,
+    login_required,
+    validate_query,
+)
 from flask import g
 from app.utils import success, error
 from app.schemas.poster import Poster, ListUserQuery
 from app.utils.validators import validate_request
 from flask import request
+
 
 @poster_bp.route("/add", methods=["POST"])
 @validate_json_content_type()
@@ -24,7 +29,7 @@ def add():
         raise
 
 
-@poster_bp.route('/list', methods=["GET"])
+@poster_bp.route("/list", methods=["GET"])
 @validate_json_content_type()
 @login_required()
 @validate_query(ListUserQuery)
@@ -35,4 +40,3 @@ def list():
         return success(result)
     except BusinessError as e:
         raise BusinessError(code=400, message=str(e))
-

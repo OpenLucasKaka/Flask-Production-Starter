@@ -24,5 +24,5 @@ class Poster(db.Model):
             "id": self.id,
             "title": self.title,
             "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "created_at": self.created_at.isoformat() if self.created_at else None,
         }

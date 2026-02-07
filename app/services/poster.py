@@ -37,9 +37,7 @@ def search_poster(page: int = 1, page_size: int = 10):
 
     try:
         pagination = Poster.query.paginate(
-            page=page,
-            per_page=page_size,
-            error_out=False
+            page=page, per_page=page_size, error_out=False
         )
 
     except Exception as e:
@@ -51,5 +49,5 @@ def search_poster(page: int = 1, page_size: int = 10):
         "list": items,
         "page": page,
         "page_size": page_size,
-        "total": pagination.total
+        "total": pagination.total,
     }
