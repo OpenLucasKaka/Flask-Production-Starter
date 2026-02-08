@@ -30,7 +30,6 @@ def search_poster(page: int = 1, page_size: int = 10):
     分页查询 Poster
     """
 
-    # 1️⃣ 参数兜底（防止恶意请求）
     page = max(page, 1)
     page_size = min(max(page_size, 1), 100)
 
@@ -43,7 +42,6 @@ def search_poster(page: int = 1, page_size: int = 10):
         raise BusinessError("查询失败", code=500)
     items = [p.to_dict() for p in pagination.items]
 
-    # 3️⃣ 返回“干净”的业务数据
     return {
         "list": items,
         "page": page,

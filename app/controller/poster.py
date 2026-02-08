@@ -1,7 +1,6 @@
 from app.controller import poster_bp
 from app.exceptions.base import BusinessError
 from app.services.poster import create_poster, search_poster
-from app.utils.pagination import pagination
 from app.utils.validators import (
     validate_json_content_type,
     login_required,
