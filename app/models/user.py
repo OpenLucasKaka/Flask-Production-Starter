@@ -24,9 +24,7 @@ class User(db.Model):
     )
     # 一对多：一个用户多个 refresh_token
     refresh_tokens = db.relationship(
-        "Refresh",
-        back_populates="user",
-        cascade="all, delete-orphan"
+        "Refresh", back_populates="user", cascade="all, delete-orphan"
     )
 
     __table_args__ = (
@@ -53,9 +51,9 @@ class Refresh(db.Model):
     # 外键（核心！）
     user_id = db.Column(
         db.Integer,
-        db.ForeignKey("users.id",name="fk_refresh_user_id"),
+        db.ForeignKey("users.id", name="fk_refresh_user_id"),
         nullable=False,
-        index=True
+        index=True,
     )
 
     # refresh_token 本体（建议存 hash）
@@ -74,7 +72,4 @@ class Refresh(db.Model):
     device = db.Column(db.String(64), nullable=True)
 
     # 反向关系
-    user = db.relationship(
-        "User",
-        back_populates="refresh_tokens"
-    )
+    user = db.relationship("User", back_populates="refresh_tokens")

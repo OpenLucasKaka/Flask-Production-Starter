@@ -76,5 +76,3 @@ def refesh():
         return success(result)
     except BusinessError as e:
         return error(code="400", message=str(e))
-
-
