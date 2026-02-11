@@ -228,3 +228,6 @@ logs/
 
 #sql
 data-dev.sqlite
+
+# migrations
+migrations/
