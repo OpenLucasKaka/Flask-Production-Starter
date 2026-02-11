@@ -3,10 +3,12 @@
 """
 
 from flask import request, g
+from flask_jwt_extended import jwt_required
 from app.controller import auth_bp
+from app.exceptions.base import BusinessError
 from app.schemas.auth import Register, Login
 from app.services import register_user
-from app.services.auth_service import user_login, user_profile
+from app.services.auth_service import user_login, user_profile, is_user
 from app.utils import success, error
 from app.utils.validators import validate_request, validate_json_content_type
 from app.extensions.rate_limiting import limiter
@@ -64,3 +66,15 @@ def profile(user_id):
     """用户信息"""
     result = user_profile(user_id)
     return success(result)
+
+
+@auth_bp.route("/refresh", methods=["GET"])
+@jwt_required(refresh=True)
+def refesh():
+    try:
+        result = is_user()
+        return success(result)
+    except BusinessError as e:
+        return error(code="400", message=str(e))
+
+

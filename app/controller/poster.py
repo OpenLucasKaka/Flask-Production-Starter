@@ -10,7 +10,6 @@ from flask import g
 from app.utils import success, error
 from app.schemas.poster import Poster, ListUserQuery
 from app.utils.validators import validate_request
-from flask import request
 
 
 @poster_bp.route("/add", methods=["POST"])
