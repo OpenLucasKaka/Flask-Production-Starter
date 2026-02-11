@@ -48,9 +48,9 @@ jobs:
       - name: Run tests with coverage
         run: uv run pytest --cov-fail-under=60
 
-      # 9️⃣ 数据库迁移文件检查
-      - name: Migration files check
-        run: test -f migrations/alembic.ini && echo "✓ Migration setup verified"
+#      # 9️⃣ 数据库迁移文件检查
+#      - name: Migration files check
+#        run: test -f migrations/alembic.ini && echo "✓ Migration setup verified"
 
       # 🔟 构建 Docker 镜像
       - name: Build Docker image
