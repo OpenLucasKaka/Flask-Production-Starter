@@ -1,447 +1,210 @@
-# Flask-Py 企业级 API 框架
+# Flask Production Starter
 
-一个真正可落地的 Flask 企业级 API 框架
-内置认证、安全、监控、日志、测试与容器化方案，开箱即用，适合中大型后端服务。
+一个可直接用于业务开发的 Flask 后端模板。
 
-## 为什么要用 Flask-Py？
-市面上的 Flask 项目大多停留在：
-- Demo 级
-- 教程级
-- “能跑但不能上生产”
+它提供生产项目常见的基础能力：认证、统一错误处理、请求追踪、结构化日志、Prometheus 指标、限流、测试、CI、Docker。
 
-Flask-Py 的目标只有一个：
-👉 让 Flask 项目从第一天就具备生产级能力
-你不需要再自己拼：
-- JWT / 日志 / Prometheus
-- 错误处理 / 安全头 / 速率限制
-- Docker / 多环境 / 健康检查
-这些已经帮你全部做好。
+## 1. 项目定位
 
-## 🎯 核心特性
+- 目标：作为后端项目初始化模板，帮助你快速进入业务开发
+- 形态：模板能力 + 示例业务模块（`auth` / `poster`）
+- 非目标：不绑定某个行业业务，不做“大而全业务系统”
 
-### 🔐 安全性
-- ✅ JWT 身份认证（登录 / 注册）
-- ✅ 9 个安全响应头（防 XSS、CSRF、点击劫持等）
-- ✅ API 速率限制（防止滥用）
-- ✅ 请求参数校验与清洗（Pydantic）
+## 2. 你可以直接得到什么
 
-### 📊 可观测性
-- ✅ 结构化日志（JSON 格式）   
-- ✅ 请求追踪 ID（便于问题诊断）
-- ✅ Prometheus 监控指标
-- ✅ 性能指标收集
+- JWT 认证（注册、登录、refresh）
+- 统一错误响应格式
+- 请求追踪（`X-Request-ID`）
+- 响应耗时头（`X-Response-Time`）
+- Prometheus 指标（`/metrics`）
+- 接口限流（Flask-Limiter）
+- 安全响应头
+- SQLAlchemy + Flask-Migrate
+- Pytest + 覆盖率、flake8、black、mypy
+- GitHub Actions CI
+- Docker / Docker Compose
 
-### 🛠️ 开发体验
-- ✅ Swagger 文档（有需要可使用）
-- ✅ Pydantic 数据验证
-- ✅ 统一的错误处理与响应格式
-- ✅ 完整的单元测试框架
+## 3. 目录结构
 
-### 🚀 生产就绪
-- ✅ 数据库连接池配置
-- ✅ 健康检查接口（`/health`, `/readiness`）
-- ✅ 多环境配置支持
-- ✅ 环境变量验证
-- ✅ Docker 容器化部署
-- ✅ Prometheus + Grafana 监控可视化
-
----
-
-## ⚡ 快速启动
-
-### 本地开发启动
-```bash
-# 安装依赖并启动
-uv sync && flask run
-```
-
-
-### Docker Compose 一键启动（推荐）
-```bash
-docker-compose up
-```
-
-**服务访问地址：**
-| 服务 | 地址 | 用途 |
-|------|------|------|
-| Flask API | http://localhost:8000 | REST API 和 Swagger 文档 |
-| Prometheus | http://localhost:9091 | 时间序列数据库和指标查询 |
-| Grafana | http://localhost:3000 | 可视化仪表板（默认密码：admin） |
----
-
-## 🏗️ 项目结构
-
-```
-flask_py/
+```text
 ├── app/
-│   ├── controller/          # API 路由层
-│   │   ├── auth.py         # 认证相关端点
-│   │   ├── health.py       # 健康检查
-│   │   └── message.py      # 消息相关端点
-│   ├── services/           # 业务逻辑层
-│   ├── models/             # 数据模型（ORM）
-│   ├── schemas/            # Pydantic 数据验证模式
-│   ├── exceptions/         # 自定义异常
-│   ├── extensions/         # Flask 扩展配置
-│   │   ├── error_handle.py       # 错误处理
-│   │   ├── extensions.py         # 扩展初始化
-│   │   ├── prometheus_metrics.py # 监控指标
-│   │   ├── rate_limiting.py      # 速率限制
-│   │   ├── security_headers.py   # 安全头
-│   │   ├── structured_logging.py # 结构化日志
-│   │   └── swagger.py            # API 文档
-│   └── utils/
-│       ├── __init__.py           # 响应格式化
-│       ├── env_validator.py      # 环境变量验证
-│       └── validators.py         # 数据验证装饰器
-├── tests/                   # 单元测试
-│   ├── conftest.py         # 测试配置和 fixtures
-│   └── test_api.py         # API 测试
-├── migrations/             # 数据库迁移
-├── logs/                   # 日志输出目录
-├── config.py              # 应用配置
-├── pyproject.toml         # 项目依赖和元数据
-├── Dockerfile             # 容器化配置
-├── docker-compose.yml     # 本地开发环境
-└── README.md              # 本文档
+│   ├── controller/            # 路由层（HTTP 入口）
+│   ├── services/              # 业务层（核心逻辑）
+│   ├── models/                # 数据模型（SQLAlchemy）
+│   ├── schemas/               # 请求参数模型（Pydantic）
+│   ├── exceptions/            # 业务异常定义
+│   ├── extensions/            # 横切能力（日志/监控/限流/错误处理等）
+│   └── utils/                 # 工具与校验
+├── tests/
+├── docs/
+├── config.py
+├── run.py
+├── wsgi.py
+├── pyproject.toml
+├── Dockerfile
+└── docker-compose.yml
 ```
 
----
+## 4. 环境要求
 
-## 🚀  从0到1开始启动项目
+- Python `3.11+`
+- 建议使用 `uv`（也支持 pip）
+- 可选：Docker / Docker Compose
 
-### 环境要求
-- Python 3.11+
-- Docker & Docker Compose（可选）
+## 5. 快速启动
 
-### 本地开发
+### 5.1 本地开发
 
-#### 1. 克隆项目
 ```bash
-git clone <repository>
-cd flask_py
-```
-
-#### 2. 创建并激活虚拟环境（uv 自动完成）
-```bash
-# macOS / Linux
-source .venv/bin/activate
-
-# Windows (PowerShell)
-.venv\Scripts\activate
-
-# 环境安装flask
-pip install flask
-# 推荐使用 uv（自动创建虚拟环境，速度快 5 倍）
-
+# 1) 安装依赖
 uv sync
-```
 
-#### 3. 环境配置
-```bash
+# 2) 配置环境变量
 cp .env.example .env
-# 编辑 .env 配置
+
+# 3) 启动服务
+python run.py
 ```
 
-#### 4. 初始化数据库
+默认地址：`http://127.0.0.1:5000`
+
+### 5.2 Docker Compose
+
+> `docker-compose.yml` 使用 production 配置，必须提供密钥。
+
 ```bash
-flask db init
-flask db migrate
-flask db upgrade
+export SECRET_KEY='replace-this'
+export JWT_SECRET_KEY='replace-this'
+docker compose up --build
 ```
 
-#### 5. 运行应用
-```bash
-# 开发模式 (可二选一)
+服务地址：
 
-1. python run.py
-2. flask run
+- API: `http://localhost:8000`
+- Prometheus: `http://localhost:9091`
+- Grafana: `http://localhost:3000`
 
-# 生产模式（使用 Gunicorn）
-gunicorn -c gunicorn.conf.py wsgi:app
-```
+## 6. 环境变量说明
 
-开发环境应用将在 `http://localhost:5000` 运行。
-模拟生产环境应用将在 `http://127.0.0.1:8000` 运行。
+| 变量名 | 是否必填 | 默认值 | 说明 |
+|---|---|---|---|
+| `FLASK_ENV` | 否 | `development` | 运行环境：`development`/`production` |
+| `SECRET_KEY` | 生产必填 | 无 | Flask 密钥 |
+| `JWT_SECRET_KEY` | 生产必填 | 无 | JWT 签名密钥 |
+| `DATABASE_URL` | 生产必填 | `sqlite:///data-dev.sqlite` | 数据库连接串 |
+| `LOG_LEVEL` | 否 | `INFO` | 日志等级 |
+| `RATE_LIMIT_STORAGE_URI` | 否 | `memory://` | 限流存储，生产建议 Redis |
 
----
+## 7. 核心接口
 
+### 健康检查
 
-## 代码格式化
-```bash
-# 检查是否存在代码未格式化
-uv run flake8 app tests 
+- `GET /health`
+- `GET /readiness`
 
-# 使用black格式化代码
-pip install black 
-black .
-```
+### 认证
 
-## 🔍 API 文档
+- `POST /auth/register`
+- `POST /auth/login`
+- `GET /auth/profile/<user_id>`
+- `GET /auth/refresh`
 
-### Swagger UI
-访问 `http://localhost:5000/api/v1/docs` 查看交互式 API 文档(需要打开api的路由)
+### 示例业务
 
-### 主要端点
+- `POST /poster/add`
+- `GET /poster/list`
 
-#### 健康检查
-- `GET /health` - 基本健康状态
-- `GET /readiness` - 就绪检查（包括数据库）
+### 监控
 
-#### 认证
-- `POST /auth/register` - 用户注册
-- `POST /auth/login` - 用户登录
+- `GET /metrics`
 
-#### 监控
-- `GET /metrics` - Prometheus 指标
+## 8. 响应格式约定
 
----
+### 成功
 
-## 📋 响应格式
-
-### 成功响应
 ```json
 {
-    "status": "success",
-    "code": "200",
-    "message": "success",
-    "data": {},
-    "request_id": "uuid"
+  "code": "200",
+  "message": "success",
+  "data": {}
 }
 ```
 
-### 错误响应
+### 失败
+
 ```json
 {
-    "status": "error",
-    "code": "40001",
-    "message": "错误描述",
-    "request_id": "uuid",
-    "data": null
+  "status": "error",
+  "code": 40001,
+  "message": "错误信息",
+  "request_id": "uuid",
+  "data": null
 }
 ```
 
----
+## 9. 开发规范（非常重要）
 
-## 🧪 测试
+新增业务模块请遵循标准流程文档：
 
-### 运行测试
+- [docs/add-module.md](docs/add-module.md)
+
+简要流程：
+
+1. 定义 `schema`
+2. 定义 `model`（如需持久化）
+3. 实现 `service`
+4. 实现 `controller`
+5. 注册 `blueprint`
+6. 增加测试
+7. 更新文档
+
+## 10. 测试与质量检查
+
 ```bash
-# 使用 uv 运行测试
-uv run pytest -v
+# 单测 + 覆盖率
+.venv/bin/pytest -q
 
-# 生成覆盖率报告
-uv run pytest --cov=app --cov-report=html
-```
+# Lint
+.venv/bin/flake8 app tests
 
-# 使用脚本运行
-```bash
-bash run_tests.sh
-```
-
-### 测试覆盖率目标
-- 当前目标：> 60%
-- 关键路径：> 80%
-
----
-
-## 🐳 Docker 部署
-
-### 构建镜像
-```bash
-docker build -t flask_py:latest .
-```
-
-### 运行容器
-```bash
-# 开发环境（包含 Prometheus 和 Grafana）
-docker-compose up
-
-# 仅运行 Flask 应用
-docker run -p 8000:8000 \
-  -e FLASK_ENV=production \
-  -e SECRET_KEY=your-secret-key \
-  -e JWT_SECRET_KEY=your-jwt-key \
-  flask_py:latest
-```
-
-### 本地开发环境启动
-
-#### 方式 1：使用 Docker Compose（推荐）
-```bash
-# 一键启动所有服务（Flask + Prometheus + Grafana）
-docker-compose up
-
-# 访问地址：
-# - Flask API:      http://localhost:8000
-# - Prometheus:     http://localhost:9090
-# - Grafana:        http://localhost:3000
-```
-
-#### 方式 2：本地运行（需要 Python 3.11+）
-```bash
-# 1. 安装依赖（自动创建虚拟环境）
-uv sync
-
-# 2. 启动 Flask 开发服务器
-uv run flask run
-
-# 4. 如需监控，手动启动 Prometheus 和 Grafana
-# Prometheus (需单独安装)
-prometheus --config.file=prometheus.yml
-
-# Grafana (Docker)
-docker run -d -p 3000:3000 \
-  -e GF_SECURITY_ADMIN_PASSWORD=admin \
-  grafana/grafana:latest
-```
-
-### Grafana 使用指南
-
-#### 首次登录
-1. 访问 `http://localhost:3000`
-2. 默认账号：`admin`
-3. 默认密码：`admin`
-4. 首次登录会提示修改密码
-
-#### 添加 Prometheus 数据源
-1. 进入 **Configuration** → **Data Sources**
-2. 点击 **Add data source**
-3. 选择 **Prometheus**
-4. URL 填入：`http://prometheus:9090`
-5. 点击 **Save & Test**
-
-#### 导入仪表板
-1. 进入 **+ → Import**
-2. 输入仪表板 ID 或粘贴 JSON
-3. 推荐的 Prometheus 仪表板：
-   - ID 3662: Prometheus 服务器监控
-   - ID 1860: Node Exporter 完整版
-
-#### 创建自定义仪表板
-示例查询（PromQL）：
-```promql
-# 请求速率
-rate(flask_requests_total[5m])
-
-# 平均响应时间
-avg(flask_request_duration_seconds_bucket)
-
-# 错误率
-rate(flask_errors_total[5m])
-
-# 活跃请求数
-flask_active_requests
-```
-
-### Kubernetes 部署
-```bash
-# 创建 ConfigMap
-kubectl create configmap flask-config --from-file=.env
-
-# 应用部署配置
-kubectl apply -f k8s/
-```
-
----
-
-## 📊 监控和日志
-
-### Prometheus 指标
-访问 `http://localhost:8000/metrics` 查看 Prometheus 格式的指标
-
-关键指标：
-- `flask_requests_total` - 请求总数
-- `flask_request_duration_seconds` - 请求耗时分布
-- `flask_active_requests` - 当前活跃请求数
-- `flask_errors_total` - 错误总数
-
-### 日志查看
-```bash
-# 实时查看日志
-tail -f logs/dev/access.log
-
-# 查看错误日志
-tail -f logs/dev/error.log
-```
-
----
-
-## ⚙️ 配置管理
-
-### 环境变量
-```bash
-# 必需的
-FLASK_ENV=development|production
-SECRET_KEY=your-secret-key
-JWT_SECRET_KEY=your-jwt-secret
-DATABASE_URL=postgresql://user:pass@localhost/dbname
-
-# 可选的
-DEBUG=True|False
-LOG_LEVEL=DEBUG|INFO|WARNING|ERROR
-```
-
-### 数据库配置
-配置文件在 `config.py` 中定义：
-- **开发环境**：SQLite（5 个连接池）
-- **生产环境**：SQLite（20 个连接池）
-
----
-
-## 🔒 安全建议
-
-### 生产环境检查清单
-- [ ] 设置强随机的 `SECRET_KEY` 和 `JWT_SECRET_KEY`
-- [ ] 使用 HTTPS（在负载均衡器或反向代理级别）
-- [ ] 配置数据库备份
-- [ ] 设置日志聚合（ELK Stack）
-- [ ] 启用 CORS 白名单
-- [ ] 定期更新依赖（检查安全漏洞）
-- [ ] 设置 WAF（Web 应用防火墙）
-- [ ] 监控异常请求模式
-
----
-
-
-## 🛠️ 开发工具链
-
-### 代码质量
-```bash
-# 代码风格检查
-flake8 app/
+# 格式检查
+.venv/bin/black --check app tests
 
 # 类型检查
-mypy app/
-
-# 代码格式化
-black app/
+.venv/bin/mypy app
 ```
 
-### 依赖管理
-```bash
-# 使用 uv 管理依赖（更快）
-uv sync
+## 11. CI 流程
 
-# 或者使用 pip
-pip install -e .
-```
+GitHub Actions 会执行：
 
----
+1. 安装依赖
+2. `flake8`
+3. `black --check`
+4. `mypy`
+5. `pytest --cov-fail-under=60`
+6. `docker build`
 
-## 📚 相关文档
+CI 文件：`.github/workflows/ci.yml`
 
-- [Flask 官方文档](https://flask.palletsprojects.com/)
-- [SQLAlchemy 文档](https://docs.sqlalchemy.org/)
-- [Pydantic 文档](https://docs.pydantic.dev/)
-- [Prometheus 文档](https://prometheus.io/docs/)
+## 12. 生产部署建议
 
----
+- 使用 Postgres/MySQL，不建议生产使用 SQLite
+- 限流存储切换到 Redis（当前默认 memory）
+- 密钥通过 Secret 管理（不要写入仓库）
+- 配置日志采集（ELK / Loki）
+- 用 Prometheus + Grafana 监控接口延迟与错误率
 
-## 📧 联系方式
+## 13. Roadmap
 
-如有问题或建议，欢迎提交 Issue 或 PR。
+- 提升关键路径覆盖率到 75%+
+- 提供自动化模块脚手架
+- 增加迁移治理文档（数据库变更策略）
+- 增加版本发布与变更日志规范
 
----
+Roadmap 细节见：
 
-**Made with ❤️ for production-ready Flask applications**
+- [docs/template-roadmap.md](docs/template-roadmap.md)
+- [docs/migration-governance.md](docs/migration-governance.md)
+- [docs/release-policy.md](docs/release-policy.md)
+- [docs/scaffold-module.md](docs/scaffold-module.md)

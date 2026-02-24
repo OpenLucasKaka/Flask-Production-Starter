@@ -13,9 +13,8 @@ from config import config_options
 def create_app():
     app = Flask(__name__)
 
-    # app_config = config_options[os.getenv("FLASK_ENV","development")]
     env = os.getenv("FLASK_ENV", "development")
-    app_config = config_options[env]
+    app_config = config_options.get(env, config_options["development"])
     app.config.from_object(app_config)
     if env == "production":
         app_config.check_secrets()
@@ -39,7 +38,7 @@ def create_app():
     app.register_blueprint(poster_bp, url_prefix="/poster")
     # app.register_blueprint(api_bp)
 
-    from .logger import app_logger, access_logger, error_logger
+    from .logger import app_logger, access_logger
 
     app.logger.handlers = app_logger.handlers
     app.logger.setLevel(app_logger.level)
@@ -50,11 +49,6 @@ def create_app():
     @app.before_request
     def log_request_info():
         access_logger.info(f"访问路径: {request.path}, 方法: {request.method}")
-
-    @app.errorhandler(Exception)
-    def handle_exception(e):
-        error_logger.exception("捕获异常")
-        return {"error": str(e)}, 500
 
     # 避免使用 `import app.models` 否则会在此作用域中覆盖 `app` 变量
     # 使用 importlib 动态导入模型包

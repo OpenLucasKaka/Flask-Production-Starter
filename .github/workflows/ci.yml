@@ -1,5 +1,9 @@
 name: CI
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches: [ main ]
@@ -46,7 +50,33 @@ jobs:
 
       # 8️⃣ 单元测试 + 覆盖率
       - name: Run tests with coverage
-        run: uv run pytest --cov-fail-under=60
+        run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=60
+
+      - name: Upload coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            coverage.xml
+            htmlcov/
+          if-no-files-found: error
+
+      - name: Build coverage summary
+        if: github.event_name == 'pull_request'
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: coverage.xml
+          badge: true
+          format: markdown
+          output: both
+
+      - name: Add coverage comment to PR
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: code-coverage-results.md
 
 #      # 9️⃣ 数据库迁移文件检查
 #      - name: Migration files check

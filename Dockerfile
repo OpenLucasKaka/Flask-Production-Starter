@@ -20,11 +20,10 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # 拷贝项目文件
-COPY pyproject.toml uv.lock ./
+COPY . .
 
 # 升级 pip 并安装依赖
-RUN pip install --upgrade pip && \
-    pip install -e . 2>/dev/null || pip install flask flask-sqlalchemy flask-jwt-extended flask-migrate
+RUN pip install --upgrade pip && pip install .
 
 
 # ===============================

@@ -14,7 +14,7 @@ from app.exceptions.base import (
     NotFoundError,
     QueryError,
 )
-from app.extensions.extensions import jwt
+from app.models.user import User
 
 
 def validate_request(schema_class):
@@ -126,7 +126,31 @@ def validate_query(schema_class):
                 query_data = request.args.to_dict(flat=True)
                 g.query_data = schema_class(**query_data)
             except ValidationError as e:
-                raise QueryError(message="query参数有误", detail=e.messages)
+                raise QueryError(message=f"query参数有误: {e}")
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def permission_required(permission_code):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            user_id = get_jwt_identity()
+            user = User.query.get(user_id)
+            if not user:
+                return jsonify({"message": "用户不存在"}), 404
+            # 汇总所有权限
+            permissions = set()
+            for role in user.roles:
+                for perm in role.permissions:
+                    permissions.add(perm.code)
+
+            if permission_code not in permissions:
+                return jsonify({"message": "权限不足"}), 403
 
             return f(*args, **kwargs)
 

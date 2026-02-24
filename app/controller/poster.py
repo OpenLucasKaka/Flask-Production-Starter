@@ -1,3 +1,7 @@
+"""
+示例业务模块：帖子相关 API 端点
+"""
+
 from app.controller import poster_bp
 from app.exceptions.base import BusinessError
 from app.services.poster import create_poster, search_poster
@@ -23,7 +27,7 @@ def add():
         return success(result)
     except BusinessError as e:
         return error(code="400", message=str(e))
-    except Exception as e:
+    except Exception:
         raise
 
 

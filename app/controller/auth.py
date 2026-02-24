@@ -1,8 +1,8 @@
 """
-认证相关的 API 端点
+示例业务模块：认证相关 API 端点
 """
 
-from flask import request, g
+from flask import g
 from flask_jwt_extended import jwt_required
 from app.controller import auth_bp
 from app.exceptions.base import BusinessError
@@ -36,7 +36,7 @@ def register():
         return success(result)
     except ValueError as e:
         return error(code="400", message=str(e))
-    except Exception as e:
+    except Exception:
         raise
 
 
@@ -56,11 +56,11 @@ def login():
         return success(result)
     except ValueError as e:
         return error(code="400", message=str(e))
-    except Exception as e:
+    except Exception:
         raise
 
 
-@auth_bp.route("profile/<user_id>", methods=["GET"])
+@auth_bp.route("/profile/<user_id>", methods=["GET"])
 @validate_json_content_type()
 def profile(user_id):
     """用户信息"""

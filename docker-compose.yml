@@ -8,6 +8,9 @@ services:
     environment:
       FLASK_ENV: production
       DATABASE_URL: sqlite:////app/data/data.sqlite
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
+      RATE_LIMIT_STORAGE_URI: ${RATE_LIMIT_STORAGE_URI:-memory://}
     volumes:
       - ./data:/app/data
     networks:

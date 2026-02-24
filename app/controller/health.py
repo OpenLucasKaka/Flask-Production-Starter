@@ -5,6 +5,7 @@
 """
 
 from flask import jsonify
+from sqlalchemy import text
 from app.extensions.extensions import db
 from app.controller import health_bp
 
@@ -28,7 +29,7 @@ def readiness_check():
     """
     try:
         # 测试数据库连接
-        db.session.execute("SELECT 1")
+        db.session.execute(text("SELECT 1"))
         db.session.commit()
 
         return (

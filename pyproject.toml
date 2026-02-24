@@ -1,7 +1,7 @@
 [project]
 name = "flask-py"
 version = "0.1.0"
-description = "Add your description here"
+description = "Production-ready Flask API starter template"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

@@ -51,7 +51,7 @@ def user_login(email, username, password):
     refresh_data = Refresh(
         user_id=user.id,
         token=refresh_token,
-        is_revoked=True,
+        is_revoked=False,
         expires_at=datetime.utcnow() + timedelta(days=30),
     )
     try:
@@ -64,7 +64,7 @@ def user_login(email, username, password):
 
 
 def user_profile(user_id):
-    user = User.query.filter(user_id == user_id).first()
+    user = User.query.filter(User.user_id == user_id).first()
     if not user:
         raise BusinessError("用户不存在", code=40004)
     return user.to_dict()
@@ -72,7 +72,7 @@ def user_profile(user_id):
 
 def is_user():
     user_id = get_jwt_identity()
-    user = User.query.filter(user_id == user_id).first()
+    user = User.query.filter(User.user_id == user_id).first()
 
     if not user:
         raise BusinessError("用户不存在", code=40004)

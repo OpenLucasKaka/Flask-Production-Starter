@@ -1,7 +1,12 @@
-# app/models/user.py
 from app.extensions.extensions import db
 from datetime import datetime
 from collections import OrderedDict
+
+user_role = db.Table(
+    "user_role",  # 表名
+    db.Column("user_id", db.Integer, db.ForeignKey("users.id")),  # 关联 users.id
+    db.Column("role_id", db.Integer, db.ForeignKey("role.id")),  # 关联 role.id
+)
 
 
 class User(db.Model):
@@ -25,6 +30,12 @@ class User(db.Model):
     # 一对多：一个用户多个 refresh_token
     refresh_tokens = db.relationship(
         "Refresh", back_populates="user", cascade="all, delete-orphan"
+    )
+
+    roles = db.relationship(
+        "Role",  # 关联的模型
+        secondary=user_role,  # 使用哪个中间表
+        backref="users",  # 反向访问
     )
 
     __table_args__ = (
@@ -73,3 +84,10 @@ class Refresh(db.Model):
 
     # 反向关系
     user = db.relationship("User", back_populates="refresh_tokens")
+
+
+class Role(db.Model):
+    __tablename__ = "role"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))

@@ -15,7 +15,7 @@ request_count = Counter(
 )
 
 request_duration = Histogram(
-    "flask_ request_duration_seconds", "Flask 请求耗时（秒）", ["method", "endpoint"]
+    "flask_request_duration_seconds", "Flask 请求耗时（秒）", ["method", "endpoint"]
 )
 
 request_size = Histogram(
@@ -37,7 +37,7 @@ def setup_prometheus(app):
     @app.before_request
     def before_request_metrics():
         """记录请求开始时间和活跃请求数"""
-        g.start_time = time.time()
+        g.metrics_start_time = time.time()
         active_requests.inc()
 
     @app.after_request
@@ -45,7 +45,7 @@ def setup_prometheus(app):
         """记录请求指标"""
         try:
             # 计算耗时
-            duration = time.time() - g.start_time
+            duration = time.time() - getattr(g, "metrics_start_time", time.time())
 
             # 获取端点信息
             method = request.method
@@ -81,13 +81,6 @@ def setup_prometheus(app):
             active_requests.dec()
 
         return response
-
-    @app.errorhandler(Exception)
-    def handle_exception_metrics(e):
-        """记录异常指标"""
-        error_count.labels(type="exception", status="500").inc()
-        active_requests.dec()
-        raise
 
     # 添加 /metrics 端点
     @app.route("/metrics")
