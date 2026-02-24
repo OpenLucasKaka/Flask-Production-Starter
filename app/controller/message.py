@@ -1,10 +1,14 @@
-from flask import request
+from flask import g
+
 from app.controller import message_bp
+from app.schemas.poster import ListPosterQuery
+from app.services.message_service import list_messages
 from app.utils import success
+from app.utils.validators import validate_query
 
 
 @message_bp.route("/message", methods=["GET"])
+@validate_query(ListPosterQuery)
 def find_post():
-    page = request.args.get("page", 1)
-    page_size = request.args.get("page_size", 10)
-    return success({"page": int(page), "page_size": int(page_size)})
+    data = g.query_data
+    return success(list_messages(page=data.page, page_size=data.page_size))

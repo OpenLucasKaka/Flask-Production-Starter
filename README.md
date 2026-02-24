@@ -107,12 +107,22 @@ docker compose up --build
 - `POST /auth/register`
 - `POST /auth/login`
 - `GET /auth/profile/<user_id>`
-- `GET /auth/refresh`
+- `POST /auth/refresh`（支持 `GET` 兼容，推荐 `POST`）
+- `POST /auth/logout`
+
+说明：
+
+- `refresh` 使用 refresh token 轮换，旧 refresh token 会被撤销
+- `logout` 会撤销当前 refresh token
 
 ### 示例业务
 
 - `POST /poster/add`
 - `GET /poster/list`
+- `GET /poster/<poster_id>`
+- `PUT /poster/<poster_id>`
+- `DELETE /poster/<poster_id>`
+- `GET /message`（公开已发布帖子查询）
 
 ### 监控
 

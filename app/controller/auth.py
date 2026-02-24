@@ -2,13 +2,18 @@
 示例业务模块：认证相关 API 端点
 """
 
-from flask import g
+from flask import g, request
 from flask_jwt_extended import jwt_required
 from app.controller import auth_bp
 from app.exceptions.base import BusinessError
 from app.schemas.auth import Register, Login
 from app.services import register_user
-from app.services.auth_service import user_login, user_profile, is_user
+from app.services.auth_service import (
+    user_login,
+    user_profile,
+    rotate_refresh_token,
+    revoke_refresh_token,
+)
 from app.utils import success, error
 from app.utils.validators import validate_request, validate_json_content_type
 from app.extensions.rate_limiting import limiter
@@ -68,11 +73,25 @@ def profile(user_id):
     return success(result)
 
 
-@auth_bp.route("/refresh", methods=["GET"])
+def _get_bearer_token() -> str:
+    auth_header = request.headers.get("Authorization", "")
+    prefix = "Bearer "
+    if not auth_header.startswith(prefix):
+        raise BusinessError("缺少 Bearer token", code=40101, http_code=401)
+    return auth_header[len(prefix) :]
+
+
+@auth_bp.route("/refresh", methods=["GET", "POST"])
 @jwt_required(refresh=True)
-def refesh():
-    try:
-        result = is_user()
-        return success(result)
-    except BusinessError as e:
-        return error(code="400", message=str(e))
+def refresh():
+    raw_refresh_token = _get_bearer_token()
+    result = rotate_refresh_token(raw_refresh_token)
+    return success(result)
+
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required(refresh=True)
+def logout():
+    raw_refresh_token = _get_bearer_token()
+    result = revoke_refresh_token(raw_refresh_token)
+    return success(result)

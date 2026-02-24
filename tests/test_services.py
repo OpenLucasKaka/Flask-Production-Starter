@@ -9,6 +9,7 @@ from app.extensions.extensions import bcrypt, db
 from app.models.poster import Poster
 from app.models.user import Refresh, User
 from app.services.auth_service import is_user, register_user, user_login, user_profile
+from app.services.auth_service import rotate_refresh_token, revoke_refresh_token
 from app.services.poster import create_poster, search_poster
 
 
@@ -88,12 +89,47 @@ def test_is_user_refreshes_access_token(service_app, monkeypatch):
         assert "access_token" in result
 
 
+def test_rotate_refresh_token_rotates_and_revokes_previous(service_app, monkeypatch):
+    with service_app.app_context():
+        register_user(_register_data())
+        user = User.query.filter_by(username="demo").first()
+        login_data = user_login("demo@example.com", "demo", "Strong123A")
+        monkeypatch.setattr(
+            "app.services.auth_service.get_jwt_identity", lambda: str(user.user_id)
+        )
+
+        result = rotate_refresh_token(login_data["refresh"])
+        records = Refresh.query.filter_by(user_id=user.id).all()
+
+        assert "access_token" in result
+        assert "refresh_token" in result
+        assert len(records) == 2
+        assert any(r.is_revoked for r in records)
+        assert any(not r.is_revoked for r in records)
+
+
+def test_revoke_refresh_token_marks_token_revoked(service_app, monkeypatch):
+    with service_app.app_context():
+        register_user(_register_data())
+        user = User.query.filter_by(username="demo").first()
+        login_data = user_login("demo@example.com", "demo", "Strong123A")
+        monkeypatch.setattr(
+            "app.services.auth_service.get_jwt_identity", lambda: str(user.user_id)
+        )
+
+        result = revoke_refresh_token(login_data["refresh"])
+        record = Refresh.query.filter_by(user_id=user.id).first()
+
+        assert result["revoked"] is True
+        assert record.is_revoked is True
+
+
 def test_create_poster_success(service_app):
     with service_app.app_context():
         register_user(_register_data())
         user = User.query.filter_by(username="demo").first()
         with service_app.test_request_context("/poster/add", method="POST"):
-            g.user_id = user.id
+            g.user_id = user.user_id
             result = create_poster(
                 SimpleNamespace(title="hello", content="world", status=4)
             )
@@ -106,7 +142,7 @@ def test_create_poster_rejects_invalid_status(service_app):
         register_user(_register_data())
         user = User.query.filter_by(username="demo").first()
         with service_app.test_request_context("/poster/add", method="POST"):
-            g.user_id = user.id
+            g.user_id = user.user_id
             with pytest.raises(BusinessError):
                 create_poster(SimpleNamespace(title="hello", content="world", status=1))
 
@@ -126,8 +162,10 @@ def test_search_poster_paginated(service_app):
             )
         db.session.commit()
 
-        result = search_poster(page=1, page_size=2)
-        assert result["page"] == 1
-        assert result["page_size"] == 2
-        assert result["total"] == 3
-        assert len(result["list"]) == 2
+        with service_app.test_request_context("/poster/list", method="GET"):
+            g.user_id = user.user_id
+            result = search_poster(page=1, page_size=2)
+            assert result["page"] == 1
+            assert result["page_size"] == 2
+            assert result["total"] == 3
+            assert len(result["list"]) == 2

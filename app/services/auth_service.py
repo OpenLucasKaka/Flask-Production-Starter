@@ -1,3 +1,4 @@
+import hashlib
 from datetime import timedelta, datetime
 
 from app.exceptions.base import BusinessError
@@ -10,6 +11,17 @@ from flask_jwt_extended import (
 )
 from sqlalchemy import or_, and_
 from app.utils.snowflake import snowflake
+
+
+def _hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _find_user_by_identity(user_identity):
+    user = User.query.filter(User.user_id == user_identity).first()
+    if not user:
+        raise BusinessError("用户不存在", code=40004, http_code=404)
+    return user
 
 
 def register_user(data):
@@ -34,11 +46,18 @@ def register_user(data):
 
 
 def user_login(email, username, password):
-    user = User.query.filter(
-        and_(User.username == username, User.email == email)
-    ).first()
+    if not email and not username:
+        raise BusinessError("邮箱或用户名至少填写一个", code=40002, http_code=400)
+
+    filters = []
+    if email:
+        filters.append(User.email == email)
+    if username:
+        filters.append(User.username == username)
+
+    user = User.query.filter(and_(*filters)).first()
     if not user:
-        raise BusinessError("用户不存在", code=40004)
+        raise BusinessError("用户不存在", code=40004, http_code=404)
 
         # 验证密码
     if not bcrypt.check_password_hash(user.password, password):
@@ -50,7 +69,7 @@ def user_login(email, username, password):
     )
     refresh_data = Refresh(
         user_id=user.id,
-        token=refresh_token,
+        token=_hash_refresh_token(refresh_token),
         is_revoked=False,
         expires_at=datetime.utcnow() + timedelta(days=30),
     )
@@ -66,7 +85,7 @@ def user_login(email, username, password):
 def user_profile(user_id):
     user = User.query.filter(User.user_id == user_id).first()
     if not user:
-        raise BusinessError("用户不存在", code=40004)
+        raise BusinessError("用户不存在", code=40004, http_code=404)
     return user.to_dict()
 
 
@@ -75,6 +94,59 @@ def is_user():
     user = User.query.filter(User.user_id == user_id).first()
 
     if not user:
-        raise BusinessError("用户不存在", code=40004)
+        raise BusinessError("用户不存在", code=40004, http_code=404)
     access_token = create_access_token(identity=user_id)
     return {"access_token": access_token}
+
+
+def rotate_refresh_token(raw_refresh_token: str):
+    user_identity = get_jwt_identity()
+    user = _find_user_by_identity(user_identity)
+
+    current_record = Refresh.query.filter_by(
+        user_id=user.id,
+        token=_hash_refresh_token(raw_refresh_token),
+        is_revoked=False,
+    ).first()
+
+    if not current_record:
+        raise BusinessError("refresh token 无效或已撤销", code=40102, http_code=401)
+
+    if current_record.expires_at <= datetime.utcnow():
+        current_record.is_revoked = True
+        db.session.commit()
+        raise BusinessError("refresh token 已过期", code=40103, http_code=401)
+
+    access_token = create_access_token(identity=str(user.user_id))
+    new_refresh_token = create_refresh_token(
+        identity=str(user.user_id), expires_delta=timedelta(days=30)
+    )
+
+    current_record.is_revoked = True
+    next_record = Refresh(
+        user_id=user.id,
+        token=_hash_refresh_token(new_refresh_token),
+        is_revoked=False,
+        expires_at=datetime.utcnow() + timedelta(days=30),
+    )
+    db.session.add(next_record)
+    db.session.commit()
+
+    return {"access_token": access_token, "refresh_token": new_refresh_token}
+
+
+def revoke_refresh_token(raw_refresh_token: str):
+    user_identity = get_jwt_identity()
+    user = _find_user_by_identity(user_identity)
+
+    record = Refresh.query.filter_by(
+        user_id=user.id,
+        token=_hash_refresh_token(raw_refresh_token),
+        is_revoked=False,
+    ).first()
+    if not record:
+        raise BusinessError("refresh token 无效或已撤销", code=40102, http_code=401)
+
+    record.is_revoked = True
+    db.session.commit()
+    return {"revoked": True}
