@@ -14,6 +14,7 @@ from app.exceptions.base import (
     NotFoundError,
     QueryError,
 )
+from app.logger import error_logger
 from app.models.user import User
 
 
@@ -101,8 +102,8 @@ def login_required():
                 # 这里捕获 Token 过期、签名错误等所有 JWT 相关问题
                 raise AuthorizationError(f"身份验证无效：{str(e)}")
             except Exception as e:
-                print(f"DEBUG JWT ERROR: {type(e).__name__} - {str(e)}")
-                raise AuthorizationError("系统处理认证时出错")
+                error_logger.exception("JWT 校验过程中发生未预期异常")
+                raise AuthorizationError("系统处理认证时出错") from e
 
             return f(*args, **kwargs)
 

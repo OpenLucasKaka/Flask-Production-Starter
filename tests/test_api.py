@@ -2,6 +2,10 @@
 API 基础端点测试
 """
 
+from flask import Flask
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 
 class TestHealthCheck:
     """健康检查端点测试"""
@@ -80,7 +84,22 @@ class TestRateLimiting:
     """速率限制测试"""
 
     def test_register_rate_limiting(self, client):
-        """测试注册端点的速率限制"""
-        # 这个测试可能需要多次请求来触发限制
-        # 实际测试需要根据配置调整
-        pass
+        """测试限流触发返回 429"""
+        app = Flask(__name__)
+        app.config["TESTING"] = True
+        limiter = Limiter(
+            key_func=get_remote_address,
+            default_limits=[],
+            storage_uri="memory://",
+        )
+        limiter.init_app(app)
+
+        @app.route("/limited")
+        @limiter.limit("2 per minute")
+        def limited():
+            return "ok", 200
+
+        test_client = app.test_client()
+        assert test_client.get("/limited").status_code == 200
+        assert test_client.get("/limited").status_code == 200
+        assert test_client.get("/limited").status_code == 429

@@ -4,6 +4,7 @@
 """
 
 import uuid
+import time
 from flask import request, g
 
 
@@ -25,7 +26,7 @@ def setup_request_tracking(app):
         # 从请求头获取或生成新的 request ID
         request_id = request.headers.get("X-Request-ID") or generate_request_id()
         g.request_id = request_id
-        g.start_time = __import__("time").time()
+        g.start_time = time.time()
 
     @app.after_request
     def after_request(response):
@@ -34,7 +35,7 @@ def setup_request_tracking(app):
 
         # 记录请求耗时
         if hasattr(g, "start_time"):
-            elapsed = __import__("time").time() - g.start_time
+            elapsed = time.time() - g.start_time
             response.headers["X-Response-Time"] = f"{elapsed:.3f}s"
 
         return response

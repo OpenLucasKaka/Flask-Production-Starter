@@ -30,7 +30,6 @@ def readiness_check():
     try:
         # 测试数据库连接
         db.session.execute(text("SELECT 1"))
-        db.session.commit()
 
         return (
             jsonify(
@@ -43,6 +42,7 @@ def readiness_check():
             200,
         )
     except Exception as e:
+        db.session.rollback()
         return (
             jsonify(
                 {

@@ -54,7 +54,8 @@ app_handler = RotatingFileHandler(
     encoding="utf-8",
 )
 app_handler.setFormatter(formatter)
-app_logger.addHandler(app_handler)
+if not app_logger.handlers:
+    app_logger.addHandler(app_handler)
 
 # ================= 访问日志 =================
 access_logger = logging.getLogger("access_logger")
@@ -70,7 +71,8 @@ access_handler = TimedRotatingFileHandler(
     encoding="utf-8",
 )
 access_handler.setFormatter(simple_formatter)
-access_logger.addHandler(access_handler)
+if not access_logger.handlers:
+    access_logger.addHandler(access_handler)
 
 # ================= 错误日志 =================
 error_logger = logging.getLogger("error_logger")
@@ -84,7 +86,8 @@ error_handler = RotatingFileHandler(
     encoding="utf-8",
 )
 error_handler.setFormatter(formatter)
-error_logger.addHandler(error_handler)
+if not error_logger.handlers:
+    error_logger.addHandler(error_handler)
 
 # # ================= 控制台日志（可选开发用） =================
 # console_handler = logging.StreamHandler()
@@ -93,8 +96,6 @@ error_logger.addHandler(error_handler)
 #     app_logger.addHandler(console_handler)
 #     access_logger.addHandler(console_handler)
 #     error_logger.addHandler(console_handler)
-
-print("当前工作目录:", os.getcwd())
 
 """
 DEBUG   开发阶段调试

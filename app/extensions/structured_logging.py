@@ -5,8 +5,9 @@
 
 import json
 import logging
-from datetime import datetime
-from flask import g, request
+from datetime import datetime, timezone
+
+from flask import g, has_request_context, request
 
 
 class JSONFormatter(logging.Formatter):
@@ -14,7 +15,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record):
         log_data = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": record.getMessage(),
@@ -24,7 +25,7 @@ class JSONFormatter(logging.Formatter):
         }
 
         # 添加请求上下文信息
-        if request:
+        if has_request_context():
             log_data["request_id"] = g.get("request_id", "N/A")
             log_data["http_method"] = request.method
             log_data["http_path"] = request.path
@@ -53,6 +54,7 @@ def setup_structured_logging(app):
             handler.setFormatter(json_formatter)
 
         # 也为其他应用级别的日志使用 JSON 格式
-        logging.getLogger("app_logger").handlers[0].setFormatter(json_formatter)
-        logging.getLogger("access_logger").handlers[0].setFormatter(json_formatter)
-        logging.getLogger("error_logger").handlers[0].setFormatter(json_formatter)
+        for logger_name in ("app_logger", "access_logger", "error_logger"):
+            logger = logging.getLogger(logger_name)
+            for handler in logger.handlers:
+                handler.setFormatter(json_formatter)

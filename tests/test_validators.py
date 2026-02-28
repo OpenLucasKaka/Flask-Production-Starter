@@ -121,6 +121,24 @@ def test_login_required_no_auth(monkeypatch):
             handler()
 
 
+def test_login_required_unexpected_error(monkeypatch):
+    app = _make_app()
+
+    def _raise_runtime_error():
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr("app.utils.validators.verify_jwt_in_request", _raise_runtime_error)
+
+    @login_required()
+    def handler():
+        return "ok"
+
+    with app.test_request_context("/", method="GET"):
+        with pytest.raises(AuthorizationError) as exc:
+            handler()
+        assert "系统处理认证时出错" in str(exc.value)
+
+
 def test_permission_required_user_not_found(monkeypatch):
     app = _make_app()
 
