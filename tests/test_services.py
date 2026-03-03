@@ -53,6 +53,27 @@ def test_register_user_duplicate_raises_value_error(service_app):
             register_user(_register_data())
 
 
+def test_register_user_commit_failure_rolls_back(service_app, monkeypatch):
+    with service_app.app_context():
+        rollback_calls = {"count": 0}
+
+        def raise_commit():
+            raise RuntimeError("db down")
+
+        def track_rollback():
+            rollback_calls["count"] += 1
+
+        monkeypatch.setattr(db.session, "commit", raise_commit)
+        monkeypatch.setattr(db.session, "rollback", track_rollback)
+
+        with pytest.raises(BusinessError) as exc:
+            register_user(_register_data(username="commit_fail"))
+
+        assert exc.value.code == 500
+        assert exc.value.http_code == 500
+        assert rollback_calls["count"] == 1
+
+
 def test_user_login_success_creates_refresh_record(service_app):
     with service_app.app_context():
         register_user(_register_data())
@@ -108,6 +129,33 @@ def test_rotate_refresh_token_rotates_and_revokes_previous(service_app, monkeypa
         assert any(not r.is_revoked for r in records)
 
 
+def test_rotate_refresh_token_commit_failure_rolls_back(service_app, monkeypatch):
+    with service_app.app_context():
+        register_user(_register_data())
+        user = User.query.filter_by(username="demo").first()
+        login_data = user_login("demo@example.com", "demo", "Strong123A")
+        rollback_calls = {"count": 0}
+
+        def raise_commit():
+            raise RuntimeError("db down")
+
+        def track_rollback():
+            rollback_calls["count"] += 1
+
+        monkeypatch.setattr(
+            "app.services.auth_service.get_jwt_identity", lambda: str(user.user_id)
+        )
+        monkeypatch.setattr(db.session, "commit", raise_commit)
+        monkeypatch.setattr(db.session, "rollback", track_rollback)
+
+        with pytest.raises(BusinessError) as exc:
+            rotate_refresh_token(login_data["refresh"])
+
+        assert exc.value.code == 50001
+        assert exc.value.http_code == 500
+        assert rollback_calls["count"] == 1
+
+
 def test_revoke_refresh_token_marks_token_revoked(service_app, monkeypatch):
     with service_app.app_context():
         register_user(_register_data())
@@ -122,6 +170,33 @@ def test_revoke_refresh_token_marks_token_revoked(service_app, monkeypatch):
 
         assert result["revoked"] is True
         assert record.is_revoked is True
+
+
+def test_revoke_refresh_token_commit_failure_rolls_back(service_app, monkeypatch):
+    with service_app.app_context():
+        register_user(_register_data())
+        user = User.query.filter_by(username="demo").first()
+        login_data = user_login("demo@example.com", "demo", "Strong123A")
+        rollback_calls = {"count": 0}
+
+        def raise_commit():
+            raise RuntimeError("db down")
+
+        def track_rollback():
+            rollback_calls["count"] += 1
+
+        monkeypatch.setattr(
+            "app.services.auth_service.get_jwt_identity", lambda: str(user.user_id)
+        )
+        monkeypatch.setattr(db.session, "commit", raise_commit)
+        monkeypatch.setattr(db.session, "rollback", track_rollback)
+
+        with pytest.raises(BusinessError) as exc:
+            revoke_refresh_token(login_data["refresh"])
+
+        assert exc.value.code == 50001
+        assert exc.value.http_code == 500
+        assert rollback_calls["count"] == 1
 
 
 def test_create_poster_success(service_app):

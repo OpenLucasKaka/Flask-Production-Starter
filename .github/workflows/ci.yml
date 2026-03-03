@@ -36,21 +36,17 @@ jobs:
         run: |
           uv sync      # uv 会根据 pyproject.toml + uv.lock 安装依赖
 
-      # 5️⃣ Lint 检查
-      - name: Lint with flake8
-        run: uv run flake8 app tests
+      # 5️⃣ 质量门禁（格式/Lint/类型）
+      - name: Quality gate
+        run: make quality
 
-      # 6️⃣ 代码格式检查
-      - name: Format check with black
-        run: uv run black --check app tests
-
-      # 7️⃣ 类型检查
-      - name: Type check with mypy
-        run: uv run mypy app
-
-      # 8️⃣ 单元测试 + 覆盖率
+      # 6️⃣ 单元测试 + 覆盖率
       - name: Run tests with coverage
         run: uv run pytest --cov=app --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=60
+
+      # 7️⃣ 系统自检（部署前标准检查）
+      - name: System check
+        run: make system-check
 
       - name: Upload coverage artifacts
         if: always() && hashFiles('coverage.xml') != ''

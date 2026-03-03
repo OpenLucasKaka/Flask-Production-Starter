@@ -19,6 +19,7 @@
 - Prometheus 指标（`/metrics`）
 - 接口限流（Flask-Limiter）
 - 安全响应头
+- System Checks（`/ops/system-checks` + `flask system-check`）
 - SQLAlchemy + Flask-Migrate
 - Pytest + 覆盖率、flake8、black、mypy
 - GitHub Actions CI
@@ -101,6 +102,7 @@ docker compose up --build
 
 - `GET /health`
 - `GET /readiness`
+- `GET /ops/system-checks`
 
 ### 认证
 
@@ -182,6 +184,12 @@ docker compose up --build
 
 # 类型检查
 .venv/bin/mypy app
+
+# 系统自检（部署前）
+.venv/bin/flask --app wsgi:app system-check
+
+# 一键质量门禁
+make quality
 ```
 
 ## 11. CI 流程
@@ -194,6 +202,18 @@ GitHub Actions 会执行：
 4. `mypy`
 5. `pytest --cov-fail-under=60`
 6. `docker build`
+
+## 13. 企业模板标准基线
+
+企业落地建议将以下标准作为强制门禁：
+
+1. 质量门禁：`make quality` 必须通过（black/flake8/mypy）
+2. 测试门禁：`pytest --cov-fail-under` 设置团队阈值
+3. 运行门禁：`flask system-check` 通过后才能部署
+4. 可观测性：`/metrics`、`/health`、`/readiness`、`/ops/system-checks` 全部接入
+5. 配置治理：生产环境必须显式设置密钥、数据库、限流存储
+
+详细清单见：[docs/enterprise-template-standard.md](docs/enterprise-template-standard.md)
 
 CI 文件：`.github/workflows/ci.yml`
 

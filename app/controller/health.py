@@ -5,9 +5,8 @@
 """
 
 from flask import jsonify
-from sqlalchemy import text
-from app.extensions.extensions import db
 from app.controller import health_bp
+from app.extensions.system_checks import run_system_checks
 
 
 @health_bp.route("/health", methods=["GET"])
@@ -27,30 +26,20 @@ def readiness_check():
     - 数据库连接是否正常
     - 用于 k8s readiness probe
     """
-    try:
-        # 测试数据库连接
-        db.session.execute(text("SELECT 1"))
+    report = run_system_checks()
+    if report["status"] == "fail":
+        return jsonify({"status": "not_ready", "checks": report["checks"]}), 503
+    return jsonify({"status": "ready", "checks": report["checks"]}), 200
 
-        return (
-            jsonify(
-                {
-                    "status": "ready",
-                    "message": "Application is ready to serve traffic",
-                    "database": "connected",
-                }
-            ),
-            200,
-        )
-    except Exception as e:
-        db.session.rollback()
-        return (
-            jsonify(
-                {
-                    "status": "not_ready",
-                    "message": "Application is not ready",
-                    "error": str(e),
-                    "database": "disconnected",
-                }
-            ),
-            503,
-        )
+
+@health_bp.route("/ops/system-checks", methods=["GET"])
+def system_checks():
+    """
+    系统巡检端点
+    - pass: 全部通过
+    - degraded: 存在告警（warn）
+    - fail: 存在失败项
+    """
+    report = run_system_checks()
+    http_code = 500 if report["status"] == "fail" else 200
+    return jsonify(report), http_code

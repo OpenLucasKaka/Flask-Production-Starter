@@ -17,6 +17,14 @@ def _hash_refresh_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def _commit_or_raise(message: str, code: int, http_code: int = 500) -> None:
+    try:
+        db.session.commit()
+    except Exception as exc:
+        db.session.rollback()
+        raise BusinessError(message, code=code, http_code=http_code) from exc
+
+
 def _find_user_by_identity(user_identity):
     user = User.query.filter(User.user_id == user_identity).first()
     if not user:
@@ -36,12 +44,8 @@ def register_user(data):
     password_hash = bcrypt.generate_password_hash(data.password).decode("utf-8")
     user_id = snowflake.generate()
     user = User(username=username, password=password_hash, email=email, user_id=user_id)
-    try:
-        db.session.add(user)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        raise BusinessError("注册失败，请重试", code=500)
+    db.session.add(user)
+    _commit_or_raise("注册失败，请重试", code=500, http_code=500)
     return user.to_dict()
 
 
@@ -59,7 +63,7 @@ def user_login(email, username, password):
     if not user:
         raise BusinessError("用户不存在", code=40004, http_code=404)
 
-        # 验证密码
+    # 验证密码
     if not bcrypt.check_password_hash(user.password, password):
         raise BusinessError("密码错误", code=40005)
 
@@ -73,12 +77,8 @@ def user_login(email, username, password):
         is_revoked=False,
         expires_at=datetime.utcnow() + timedelta(days=30),
     )
-    try:
-        db.session.add(refresh_data)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        raise BusinessError("获取token失败请重试", code=40006)
+    db.session.add(refresh_data)
+    _commit_or_raise("获取token失败请重试", code=40006, http_code=500)
     return {**user.to_dict(), "token": access_token, "refresh": refresh_token}
 
 
@@ -114,7 +114,7 @@ def rotate_refresh_token(raw_refresh_token: str):
 
     if current_record.expires_at <= datetime.utcnow():
         current_record.is_revoked = True
-        db.session.commit()
+        _commit_or_raise("refresh token 状态更新失败", code=50001, http_code=500)
         raise BusinessError("refresh token 已过期", code=40103, http_code=401)
 
     access_token = create_access_token(identity=str(user.user_id))
@@ -130,7 +130,7 @@ def rotate_refresh_token(raw_refresh_token: str):
         expires_at=datetime.utcnow() + timedelta(days=30),
     )
     db.session.add(next_record)
-    db.session.commit()
+    _commit_or_raise("refresh token 轮换失败", code=50001, http_code=500)
 
     return {"access_token": access_token, "refresh_token": new_refresh_token}
 
@@ -148,5 +148,5 @@ def revoke_refresh_token(raw_refresh_token: str):
         raise BusinessError("refresh token 无效或已撤销", code=40102, http_code=401)
 
     record.is_revoked = True
-    db.session.commit()
+    _commit_or_raise("refresh token 撤销失败", code=50001, http_code=500)
     return {"revoked": True}

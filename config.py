@@ -9,6 +9,7 @@ class Config:
     DEBUG = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    RATE_LIMIT_STORAGE_URI = os.environ.get("RATE_LIMIT_STORAGE_URI", "memory://")
 
     # Cookie 安全通用配置
     SESSION_COOKIE_HTTPONLY = True

@@ -18,5 +18,7 @@ limiter = Limiter(
 
 def setup_rate_limiting(app):
     """初始化速率限制"""
+    storage_uri = app.config.get("RATE_LIMIT_STORAGE_URI", "memory://")
+    app.config["RATELIMIT_STORAGE_URI"] = storage_uri
     limiter.init_app(app)
     return limiter

@@ -1,13 +1,27 @@
 import os
 
 from flask import Flask, request
+import click
 
 from app.extensions.extensions import register_extensions
 from app.extensions.request_tracking import setup_request_tracking
 from app.extensions.structured_logging import setup_structured_logging
 from app.extensions.prometheus_metrics import setup_prometheus
 from app.extensions.security_headers import setup_security_headers
+from app.extensions.system_checks import run_system_checks
 from config import config_options
+
+
+def register_cli_commands(app):
+    @app.cli.command("system-check")
+    def system_check_command():
+        """执行系统级自检（用于部署前检查）"""
+        report = run_system_checks()
+        click.echo(f"status={report['status']}")
+        for item in report["checks"]:
+            click.echo(f"[{item['status']}] {item['name']} - {item['detail']}")
+        if report["status"] == "fail":
+            raise click.ClickException("system check failed")
 
 
 def create_app():
@@ -16,6 +30,8 @@ def create_app():
     env = os.getenv("FLASK_ENV", "development")
     app_config = config_options.get(env, config_options["development"])
     app.config.from_object(app_config)
+    app.config["APP_ENV"] = env
+    app.config["ENV"] = env
     if env == "production":
         app_config.check_secrets()
 
@@ -60,5 +76,6 @@ def create_app():
     from app.extensions.error_handle import register_error_handler
 
     register_error_handler(app)
+    register_cli_commands(app)
 
     return app
