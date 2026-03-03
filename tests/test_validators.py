@@ -127,7 +127,9 @@ def test_login_required_unexpected_error(monkeypatch):
     def _raise_runtime_error():
         raise RuntimeError("boom")
 
-    monkeypatch.setattr("app.utils.validators.verify_jwt_in_request", _raise_runtime_error)
+    monkeypatch.setattr(
+        "app.utils.validators.verify_jwt_in_request", _raise_runtime_error
+    )
 
     @login_required()
     def handler():
